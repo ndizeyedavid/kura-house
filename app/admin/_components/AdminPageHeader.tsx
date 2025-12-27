@@ -1,4 +1,6 @@
+import { SignedIn, SignedOut, SignInButton, UserButton } from "@clerk/nextjs";
 import type { AdminTab } from "./types";
+import Link from "next/link";
 
 type Props = {
   onTabChange: (tab: AdminTab) => void;
@@ -29,6 +31,9 @@ export default function AdminPageHeader({ onTabChange }: Props) {
           >
             View inbox
           </button>
+          <SignedIn>
+            <UserButton />
+          </SignedIn>
         </div>
       </div>
     </div>

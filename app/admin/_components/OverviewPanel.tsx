@@ -111,7 +111,7 @@ export default function OverviewPanel({
                   </div>
                   <div className="text-end">
                     <div className="small admin-muted">{m.createdAt}</div>
-                    {m.status === "new" ? (
+                    {m.status === "NEW" ? (
                       <span className="badge text-bg-warning">New</span>
                     ) : (
                       <span className="badge text-bg-secondary">Read</span>

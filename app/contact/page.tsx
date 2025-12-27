@@ -1,6 +1,54 @@
+"use client";
+
 import { ArrowRight } from "lucide-react";
+import { useState } from "react";
 
 export default function contactPage() {
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [subject, setSubject] = useState("");
+  const [message, setMessage] = useState("");
+
+  const [submitting, setSubmitting] = useState(false);
+  const [success, setSuccess] = useState("");
+  const [error, setError] = useState("");
+
+  const onSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    try {
+      setSubmitting(true);
+      setError("");
+      setSuccess("");
+
+      const res = await fetch("/api/contact", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name,
+          email,
+          subject,
+          message,
+        }),
+      });
+
+      if (!res.ok) {
+        const text = await res.text();
+        throw new Error(text || `Failed to send message (${res.status})`);
+      }
+
+      setSuccess("Message sent successfully. Thank you for reaching out.");
+      setName("");
+      setEmail("");
+      setSubject("");
+      setMessage("");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to send message");
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
   return (
     <>
       <div
@@ -48,7 +96,12 @@ export default function contactPage() {
                 Kindly reach us out for more information fille the following
                 form below with it's respondiing information.
               </p>
-              <form>
+              {error ? <div className="alert alert-danger">{error}</div> : null}
+              {success ? (
+                <div className="alert alert-success">{success}</div>
+              ) : null}
+
+              <form onSubmit={onSubmit}>
                 <div className="row g-3">
                   <div className="col-md-6">
                     <div className="form-floating">
@@ -57,6 +110,8 @@ export default function contactPage() {
                         className="form-control"
                         id="name"
                         placeholder="Your Name"
+                        value={name}
+                        onChange={(e) => setName(e.target.value)}
                       />
                       <label htmlFor="name">Your Name</label>
                     </div>
@@ -68,6 +123,8 @@ export default function contactPage() {
                         className="form-control"
                         id="email"
                         placeholder="Your Email"
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
                       />
                       <label htmlFor="email">Your Email</label>
                     </div>
@@ -79,6 +136,8 @@ export default function contactPage() {
                         className="form-control"
                         id="subject"
                         placeholder="Subject"
+                        value={subject}
+                        onChange={(e) => setSubject(e.target.value)}
                       />
                       <label htmlFor="subject">Subject</label>
                     </div>
@@ -90,19 +149,25 @@ export default function contactPage() {
                         placeholder="Leave a message here"
                         id="message"
                         style={{ height: "100px" }}
+                        value={message}
+                        onChange={(e) => setMessage(e.target.value)}
                       ></textarea>
                       <label htmlFor="message">Message</label>
                     </div>
                   </div>
                   <div className="col-12  ">
-                    <button className="btn btn-primary py-2 px-3 me-3">
+                    <button
+                      className="btn btn-primary py-2 px-3 me-3"
+                      type="submit"
+                      disabled={submitting}
+                    >
                       <span
                         style={{
                           position: "relative",
                           top: -4,
                         }}
                       >
-                        Send Message
+                        {submitting ? "Sending..." : "Send Message"}
                       </span>
                       <div className="d-inline-flex btn-sm-square bg-white text-primary rounded-circle ms-2">
                         <ArrowRight

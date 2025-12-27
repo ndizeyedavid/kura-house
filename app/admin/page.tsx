@@ -1,58 +1,91 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 import AdminShell from "./_components/AdminShell";
 import AdminPageHeader from "./_components/AdminPageHeader";
 import AdminSidebar from "./_components/AdminSidebar";
 import CreateEventForm from "./_components/CreateEventForm";
+import EventsPanel from "./_components/EventsPanel";
 import MessagesPanel from "./_components/MessagesPanel";
 import OverviewPanel from "./_components/OverviewPanel";
 
-import type { AdminTab, Message } from "./_components/types";
+import type { AdminTab, Event, Message } from "./_components/types";
 
 export default function AdminPage() {
   const [tab, setTab] = useState<AdminTab>("overview");
 
-  const messages = useMemo<Message[]>(
-    () => [
-      {
-        id: "m_001",
-        name: "Jane Doe",
-        email: "jane@example.com",
-        subject: "Partnership inquiry",
-        message:
-          "Hello, we would like to partner with you on upcoming community programs. Please share more details about your needs and timelines.",
-        createdAt: "2025-12-27 14:10",
-        status: "new",
-      },
-      {
-        id: "m_002",
-        name: "Eric",
-        email: "eric@example.com",
-        subject: "Volunteer sign-up",
-        message:
-          "Hi team, I would like to volunteer for your next event. How can I register and what is the schedule?",
-        createdAt: "2025-12-26 09:45",
-        status: "read",
-      },
-      {
-        id: "m_003",
-        name: "Amina",
-        email: "amina@example.com",
-        subject: "Donation receipt",
-        message:
-          "I made a donation last week and would like confirmation and a receipt for my records. Thank you.",
-        createdAt: "2025-12-25 18:02",
-        status: "read",
-      },
-    ],
-    []
-  );
+  const [messages, setMessages] = useState<Message[]>([]);
+  const [messagesLoading, setMessagesLoading] = useState<boolean>(true);
+  const [messagesError, setMessagesError] = useState<string>("");
 
-  const [selectedMessageId, setSelectedMessageId] = useState<string>(
-    messages[0]?.id ?? ""
-  );
+  const [events, setEvents] = useState<Event[]>([]);
+  const [eventsLoading, setEventsLoading] = useState<boolean>(true);
+  const [eventsError, setEventsError] = useState<string>("");
+
+  const [selectedMessageId, setSelectedMessageId] = useState<string>("");
+
+  useEffect(() => {
+    let cancelled = false;
+
+    const loadMessages = async () => {
+      try {
+        setMessagesLoading(true);
+        setMessagesError("");
+
+        const res = await fetch("/api/messages", { cache: "no-store" });
+        if (!res.ok) throw new Error(`Failed to load messages (${res.status})`);
+
+        const data = (await res.json()) as Message[];
+        if (cancelled) return;
+
+        setMessages(Array.isArray(data) ? data : []);
+      } catch (e) {
+        if (cancelled) return;
+        setMessagesError(
+          e instanceof Error ? e.message : "Failed to load messages"
+        );
+        setMessages([]);
+      } finally {
+        if (cancelled) return;
+        setMessagesLoading(false);
+      }
+    };
+
+    void loadMessages();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const refreshEvents = async () => {
+    try {
+      setEventsLoading(true);
+      setEventsError("");
+
+      const res = await fetch("/api/events", { cache: "no-store" });
+      if (!res.ok) throw new Error(`Failed to load events (${res.status})`);
+
+      const data = (await res.json()) as Event[];
+      setEvents(Array.isArray(data) ? data : []);
+    } catch (e) {
+      setEventsError(e instanceof Error ? e.message : "Failed to load events");
+      setEvents([]);
+    } finally {
+      setEventsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    void refreshEvents();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  useEffect(() => {
+    if (!selectedMessageId && messages.length > 0) {
+      setSelectedMessageId(messages[0]?.id ?? "");
+    }
+  }, [messages, selectedMessageId]);
   const selectedMessage = useMemo(
     () => messages.find((m) => m.id === selectedMessageId) ?? null,
     [messages, selectedMessageId]
@@ -60,13 +93,13 @@ export default function AdminPage() {
 
   const stats = useMemo(
     () => ({
-      totalEvents: 12,
-      publishedEvents: 7,
-      draftEvents: 5,
+      totalEvents: events.length,
+      publishedEvents: events.filter((e) => e.status === "PUBLISHED").length,
+      draftEvents: events.filter((e) => e.status === "DRAFT").length,
       totalMessages: messages.length,
-      newMessages: messages.filter((m) => m.status === "new").length,
+      newMessages: messages.filter((m) => m.status === "NEW").length,
     }),
-    [messages]
+    [events, messages]
   );
 
   return (
@@ -91,15 +124,44 @@ export default function AdminPage() {
               onTabChange={setTab}
             />
           ) : tab === "create_event" ? (
-            <CreateEventForm />
-          ) : (
-            <MessagesPanel
-              messages={messages}
-              selectedMessageId={selectedMessageId}
-              onSelectMessage={setSelectedMessageId}
-              newMessages={stats.newMessages}
-              selectedMessage={selectedMessage}
+            <>
+              {eventsError ? (
+                <div className="alert alert-danger">{eventsError}</div>
+              ) : null}
+              <CreateEventForm
+                onCreated={() => {
+                  void refreshEvents();
+                  setTab("events");
+                }}
+              />
+            </>
+          ) : tab === "events" ? (
+            <EventsPanel
+              events={events}
+              loading={eventsLoading}
+              error={eventsError}
+              onRefresh={() => void refreshEvents()}
             />
+          ) : (
+            <>
+              {messagesLoading ? (
+                <div className="alert alert-info mb-0">Loading messages...</div>
+              ) : messagesError ? (
+                <div className="alert alert-danger mb-0">{messagesError}</div>
+              ) : messages.length === 0 ? (
+                <div className="alert alert-secondary mb-0">
+                  No messages yet. Submit the contact form to see messages here.
+                </div>
+              ) : (
+                <MessagesPanel
+                  messages={messages}
+                  selectedMessageId={selectedMessageId}
+                  onSelectMessage={setSelectedMessageId}
+                  newMessages={stats.newMessages}
+                  selectedMessage={selectedMessage}
+                />
+              )}
+            </>
           )}
         </div>
       </div>

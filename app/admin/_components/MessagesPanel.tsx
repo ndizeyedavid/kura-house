@@ -61,7 +61,7 @@ export default function MessagesPanel({
                     onClick={() => onSelectMessage(m.id)}
                   >
                     <td>
-                      {m.status === "new" ? (
+                      {m.status === "NEW" ? (
                         <span className="badge text-bg-warning">New</span>
                       ) : (
                         <span className="badge text-bg-secondary">Read</span>

@@ -37,6 +37,15 @@ export default function AdminSidebar({
             <button
               type="button"
               className={`btn ${
+                tab === "events" ? "btn-primary" : "btn-outline-primary"
+              }`}
+              onClick={() => onTabChange("events")}
+            >
+              Events
+            </button>
+            <button
+              type="button"
+              className={`btn ${
                 tab === "messages" ? "btn-primary" : "btn-outline-primary"
               }`}
               onClick={() => onTabChange("messages")}

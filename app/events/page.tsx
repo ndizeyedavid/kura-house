@@ -1,5 +1,6 @@
 "use client";
-import { useEffect } from "react";
+import Link from "next/link";
+import { useEffect, useState } from "react";
 import type { CSSProperties } from "react";
 
 const styles: { [key: string]: CSSProperties } = {
@@ -230,71 +231,49 @@ const responsiveStyles = `
   .read-more-btn:focus { outline: 3px solid rgba(18,138,67,0.15); outline-offset: 2px; }
 `;
 
+type EventDto = {
+  id: string;
+  title: string;
+  category: string;
+  dateTime: string;
+  location: string;
+  coverImageUrl: string | null;
+  shortSummary: string;
+  fullDescription: string;
+};
+
 export default function EventsPage() {
+  const [events, setEvents] = useState<EventDto[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+
   useEffect(() => {
-    // Modal functionality
-    const modal = document.getElementById("event-modal");
-    const modalTitle = document.getElementById("modal-title");
-    const modalDate = document.getElementById("modal-date");
-    const modalLocation = document.getElementById("modal-location");
-    const modalImage = document.getElementById("modal-image");
-    const modalDesc = document.getElementById("modal-desc");
-    const modalClose = document.getElementById("modal-close");
-    const modalBack = document.getElementById("modal-back");
+    let cancelled = false;
 
-    const openModal = (card: any) => {
-      // @ts-ignore
-      modalTitle.textContent = card.dataset.title;
-      // @ts-ignore
-      modalDate.textContent = card.dataset.date;
-      // @ts-ignore
-      modalLocation.textContent = card.dataset.location.split(" — ")[1];
-      // @ts-ignore
-      modalImage.src = card.dataset.image;
-      // @ts-ignore
-      modalImage.alt = card.dataset.title;
-      // @ts-ignore
-      modalDesc.textContent = card.dataset.full;
-      // @ts-ignore
-      modal.classList.add("open");
-      // @ts-ignore
-      modal.setAttribute("aria-hidden", "false");
-    };
+    const load = async () => {
+      try {
+        setLoading(true);
+        setError("");
 
-    const closeModal = () => {
-      // @ts-ignore
-      modal.classList.remove("open");
-      // @ts-ignore
-      modal.setAttribute("aria-hidden", "true");
-    };
+        const res = await fetch("/api/events", { cache: "no-store" });
+        if (!res.ok) throw new Error(`Failed to load events (${res.status})`);
 
-    // Add click handlers to read more buttons
-    document.querySelectorAll(".read-more-btn").forEach((btn) => {
-      btn.addEventListener("click", () => {
-        const card = btn.closest(".event-card");
-        openModal(card);
-      });
-    });
-    // @ts-ignore
-    modalClose.addEventListener("click", closeModal);
-    // @ts-ignore
-    modalBack.addEventListener("click", closeModal);
-    // @ts-ignore
-    modal.addEventListener("click", (e) => {
-      if (e.target === modal) closeModal();
-    });
-
-    // Escape key to close modal
-    const handleEscape = (e: KeyboardEvent) => {
-      // @ts-ignore
-      if (e.key === "Escape" && modal.classList.contains("open")) {
-        closeModal();
+        const data = (await res.json()) as EventDto[];
+        if (cancelled) return;
+        setEvents(Array.isArray(data) ? data : []);
+      } catch (e) {
+        if (cancelled) return;
+        setError(e instanceof Error ? e.message : "Failed to load events");
+        setEvents([]);
+      } finally {
+        if (cancelled) return;
+        setLoading(false);
       }
     };
-    document.addEventListener("keydown", handleEscape);
 
+    void load();
     return () => {
-      document.removeEventListener("keydown", handleEscape);
+      cancelled = true;
     };
   }, []);
 
@@ -355,229 +334,66 @@ export default function EventsPage() {
               style={styles.eventsGrid}
               aria-label="Past events list"
             >
-              <article
-                className="event-card"
-                style={styles.eventCard}
-                data-title="Community Tree Planting Day"
-                data-date="Aug 20, 2025"
-                data-location="Kigali — Gisozi"
-                data-image="img/bg_!.png"
-                data-full="Over 120 volunteers joined our tree planting day to restore a damaged slope area. We planted 3,000 native seedlings and trained local youth on tree care and soil preservation. The event promoted biodiversity, reduced erosion and created livelihood opportunities through nursery management."
-              >
-                <div style={styles.eventMedia} aria-hidden="true">
-                  <img
-                    src="img/bg_!.png"
-                    alt="Volunteers planting trees"
-                    style={styles.eventMediaImg}
-                    className="event-media-img-responsive"
-                  />
+              {loading ? (
+                <div className="alert alert-info" role="status">
+                  Loading events...
                 </div>
-
-                <div style={styles.eventContent}>
-                  <div style={styles.meta}>
-                    <span style={styles.badge}>Education</span>
-                    <span style={styles.info}>Aug 20, 2025 • Gisozi</span>
-                  </div>
-
-                  <h3 style={styles.title}>Foster primary Education </h3>
-
-                  <p style={styles.desc}>
-                    and map areas for future reforestation. The activity focused
-                    on slope stabilization and youth engagement.
-                  </p>
-
-                  <div style={styles.cardFooter}>
-                    <button
-                      style={styles.readMoreBtn}
-                      className="read-more-btn"
-                      aria-haspopup="dialog"
-                    >
-                      Read more
-                    </button>
-                  </div>
+              ) : error ? (
+                <div className="alert alert-danger" role="alert">
+                  {error}
                 </div>
-              </article>
-
-              <article
-                className="event-card"
-                style={styles.eventCard}
-                data-title="Nutrition & Mothercare Workshop"
-                data-date="Jul 10, 2025"
-                data-location="Ruhango — Community Hall"
-                data-image="img/bg_2.png"
-                data-full="This workshop trained 85 mothers on nutrition, breastfeeding best practices, hygiene and kitchen gardening. Practical sessions included making nutrient-dense meals using affordable local ingredients. The workshop linked participants to local health services and peer-support groups."
-              >
-                <div style={styles.eventMedia} aria-hidden="true">
-                  <img
-                    src="img/bg_2.png"
-                    alt="Participants at mothercare workshop"
-                    style={styles.eventMediaImg}
-                    className="event-media-img-responsive"
-                  />
+              ) : events.length === 0 ? (
+                <div className="alert alert-secondary" role="status">
+                  No events yet.
                 </div>
+              ) : (
+                events.map((e) => (
+                  <article
+                    key={e.id}
+                    className="event-card"
+                    style={styles.eventCard}
+                  >
+                    <div style={styles.eventMedia} aria-hidden="true">
+                      {e.coverImageUrl ? (
+                        <img
+                          src={e.coverImageUrl}
+                          alt={e.title}
+                          style={styles.eventMediaImg}
+                          className="event-media-img-responsive"
+                        />
+                      ) : (
+                        <div style={{ width: "100%", height: "100%" }} />
+                      )}
+                    </div>
 
-                <div style={styles.eventContent}>
-                  <div style={styles.meta}>
-                    <span style={styles.badge}>Education</span>
-                    <span style={styles.info}>Jul 10, 2025 • Ruhango</span>
-                  </div>
+                    <div style={styles.eventContent}>
+                      <div style={styles.meta}>
+                        <span style={styles.badge}>{e.category}</span>
+                        <span style={styles.info}>
+                          {new Date(e.dateTime).toLocaleDateString()} •{" "}
+                          {e.location}
+                        </span>
+                      </div>
 
-                  <h3 style={styles.title}>Nutrition & Mothercare Workshop</h3>
+                      <h3 style={styles.title}>{e.title}</h3>
 
-                  <p style={styles.desc}>
-                    Practical, hands-on training for mothers about child
-                    nutrition, hygiene and home kitchen gardening to improve
-                    family food security and early-child development outcomes.
-                  </p>
+                      <p style={styles.desc}>{e.shortSummary}</p>
 
-                  <div style={styles.cardFooter}>
-                    <button
-                      style={styles.readMoreBtn}
-                      className="read-more-btn"
-                      aria-haspopup="dialog"
-                    >
-                      Read more
-                    </button>
-                  </div>
-                </div>
-              </article>
-
-              <article
-                className="event-card"
-                style={styles.eventCard}
-                data-title="Youth Coding Bootcamp Graduation"
-                data-date="Jun 05, 2025"
-                data-location="Gisenyi — ALX Hub"
-                data-image="https://images.unsplash.com/photo-1555066931-4365d14bab8c?q=80&w=1400&auto=format&fit=crop"
-                data-full="Graduation for 24 youth who completed an 8-week coding bootcamp covering HTML, CSS, JavaScript and basic backend concepts. Students presented final projects and received mentorship on pathways to internships and freelance work."
-              >
-                <div style={styles.eventMedia} aria-hidden="true">
-                  <img
-                    src="img/agri.png"
-                    alt="Graduates at coding bootcamp"
-                    style={styles.eventMediaImg}
-                    className="event-media-img-responsive"
-                  />
-                </div>
-
-                <div style={styles.eventContent}>
-                  <div style={styles.meta}>
-                    <span style={styles.badge}>Agriculture</span>
-                    <span style={styles.info}>Jun 05, 2025 • Gisenyi</span>
-                  </div>
-
-                  <h3 style={styles.title}>Simple livestock farming</h3>
-
-                  <p style={styles.desc}>
-                    Our first cohort completed an intensive program and
-                    showcased apps for local problems — from farm marketplaces
-                    to school management tools. Mentors and employers attended
-                    the demo day.
-                  </p>
-
-                  <div style={styles.cardFooter}>
-                    <button
-                      style={styles.readMoreBtn}
-                      className="read-more-btn"
-                      aria-haspopup="dialog"
-                    >
-                      Read more
-                    </button>
-                  </div>
-                </div>
-              </article>
+                      <div style={styles.cardFooter}>
+                        <Link
+                          href={`/events/${e.id}`}
+                          className="read-more-btn"
+                          style={styles.readMoreBtn}
+                        >
+                          Read more
+                        </Link>
+                      </div>
+                    </div>
+                  </article>
+                ))
+              )}
             </section>
           </main>
-        </div>
-
-        <div
-          style={styles.modalOverlay}
-          className="modal-overlay"
-          id="event-modal"
-          role="dialog"
-          aria-modal="true"
-          aria-hidden="true"
-          aria-labelledby="modal-title"
-        >
-          <div style={styles.modal} className="modal" role="document">
-            <div
-              style={styles.modalGrid}
-              className="modal-grid modal-grid-responsive"
-            >
-              <div
-                style={styles.modalMedia}
-                className="modal-media"
-                id="modal-media"
-              >
-                <img
-                  src=""
-                  alt=""
-                  id="modal-image"
-                  style={styles.modalMediaImg}
-                />
-              </div>
-
-              <div style={styles.modalBody} className="modal-body">
-                <div
-                  style={{ display: "flex", alignItems: "center", gap: "8px" }}
-                >
-                  <h2 style={styles.modalBodyH2} id="modal-title">
-                    Event Title
-                  </h2>
-                  <button
-                    style={styles.modalClose}
-                    className="modal-close"
-                    id="modal-close"
-                    aria-label="Close dialog"
-                  >
-                    ✕
-                  </button>
-                </div>
-
-                <div
-                  style={{ ...styles.meta, ...styles.modalBodyMeta }}
-                  className="meta"
-                  id="modal-meta"
-                >
-                  <span style={styles.info} className="info" id="modal-date">
-                    Date
-                  </span>
-                  <span style={{ color: "#6b7280" }}>•</span>
-                  <span
-                    style={styles.info}
-                    className="info"
-                    id="modal-location"
-                  >
-                    Location
-                  </span>
-                </div>
-
-                <p style={styles.modalBodyP} id="modal-desc">
-                  Full event description goes here.
-                </p>
-
-                <div
-                  style={{ ...styles.modalActions, marginTop: "auto" }}
-                  className="modal-actions"
-                >
-                  <button
-                    style={styles.btnSecondary}
-                    className="btn-secondary"
-                    id="modal-back"
-                  >
-                    Back to events
-                  </button>
-                  <button
-                    style={styles.btnPrimary}
-                    className="btn-primary"
-                    id="modal-share"
-                  >
-                    Share / Download Photos
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
         </div>
       </section>
     </>

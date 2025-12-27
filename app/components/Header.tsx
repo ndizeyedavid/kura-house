@@ -56,11 +56,11 @@ export default function Header() {
         className="navbar navbar-expand-lg navbar-dark py-lg-0 px-lg-5 wow fadeIn"
         data-wow-delay="0.1s"
       >
-        <a href="index.html" className="navbar-brand ms-4 ms-lg-0">
+        <Link href="/" className="navbar-brand ms-4 ms-lg-0">
           <h1 className="fw-bold text-primary m-0">
             KURA<span className="text-white">HOUSE</span>
           </h1>
-        </a>
+        </Link>
         <button
           type="button"
           className="navbar-toggler me-4"

@@ -13,6 +13,11 @@ export default function contactPage() {
   const [success, setSuccess] = useState("");
   const [error, setError] = useState("");
 
+  const isValid =
+    name.trim().length > 0 &&
+    email.trim().length > 0 &&
+    message.trim().length > 0;
+
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -21,14 +26,18 @@ export default function contactPage() {
       setError("");
       setSuccess("");
 
+      if (!name.trim()) throw new Error("Please enter your name");
+      if (!email.trim()) throw new Error("Please enter your email");
+      if (!message.trim()) throw new Error("Please enter a message");
+
       const res = await fetch("/api/contact", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          name,
-          email,
-          subject,
-          message,
+          name: name.trim(),
+          email: email.trim(),
+          subject: subject.trim(),
+          message: message.trim(),
         }),
       });
 
@@ -112,6 +121,7 @@ export default function contactPage() {
                         placeholder="Your Name"
                         value={name}
                         onChange={(e) => setName(e.target.value)}
+                        required
                       />
                       <label htmlFor="name">Your Name</label>
                     </div>
@@ -125,6 +135,7 @@ export default function contactPage() {
                         placeholder="Your Email"
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
+                        required
                       />
                       <label htmlFor="email">Your Email</label>
                     </div>
@@ -151,6 +162,7 @@ export default function contactPage() {
                         style={{ height: "100px" }}
                         value={message}
                         onChange={(e) => setMessage(e.target.value)}
+                        required
                       ></textarea>
                       <label htmlFor="message">Message</label>
                     </div>
@@ -159,7 +171,7 @@ export default function contactPage() {
                     <button
                       className="btn btn-primary py-2 px-3 me-3"
                       type="submit"
-                      disabled={submitting}
+                      disabled={submitting || !isValid}
                     >
                       <span
                         style={{

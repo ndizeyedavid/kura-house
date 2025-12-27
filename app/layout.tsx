@@ -45,6 +45,16 @@ export default function RootLayout({
       >
         {children}
       </body>
+
+      <script async src="/lib/jquery-3.4.1.min.js"></script>
+      <script async src="/lib/js/bootstrap.bundle.min.js"></script>
+      <script async src="/lib/wow/wow.min.js"></script>
+      <script async src="/lib/easing/easing.min.js"></script>
+      <script async src="/lib/waypoints/waypoints.min.js"></script>
+      <script async src="/lib/owlcarousel/owl.carousel.min.js"></script>
+      <script async src="/lib/parallax/parallax.min.js"></script>
+
+      <script async src="/js/main.js"></script>
     </html>
   );
 }

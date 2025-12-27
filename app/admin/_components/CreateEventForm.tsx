@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 type Props = {
   onCreated?: () => void;
@@ -14,6 +14,7 @@ export default function CreateEventForm({ onCreated }: Props) {
   const [location, setLocation] = useState("");
   const [coverImageUrl, setCoverImageUrl] = useState("");
   const [coverImageFile, setCoverImageFile] = useState<File | null>(null);
+  const [coverImagePreviewUrl, setCoverImagePreviewUrl] = useState<string>("");
   const [shortSummary, setShortSummary] = useState("");
   const [fullDescription, setFullDescription] = useState("");
 
@@ -25,6 +26,20 @@ export default function CreateEventForm({ onCreated }: Props) {
   const badgeLabel = useMemo(() => "Published", []);
   const badgeClass = useMemo(() => "text-bg-success", []);
 
+  useEffect(() => {
+    if (!coverImageFile) {
+      setCoverImagePreviewUrl("");
+      return;
+    }
+
+    const url = URL.createObjectURL(coverImageFile);
+    setCoverImagePreviewUrl(url);
+
+    return () => {
+      URL.revokeObjectURL(url);
+    };
+  }, [coverImageFile]);
+
   const resetForm = () => {
     setTitle("");
     setCategory("Education");
@@ -33,8 +48,15 @@ export default function CreateEventForm({ onCreated }: Props) {
     setLocation("");
     setCoverImageUrl("");
     setCoverImageFile(null);
+    setCoverImagePreviewUrl("");
     setShortSummary("");
     setFullDescription("");
+  };
+
+  const clearCoverImage = () => {
+    setCoverImageUrl("");
+    setCoverImageFile(null);
+    setCoverImagePreviewUrl("");
   };
 
   const uploadCoverImage = async () => {
@@ -207,6 +229,33 @@ export default function CreateEventForm({ onCreated }: Props) {
             <div className="form-text">
               Choose an image to upload to Cloudinary. (Optional)
             </div>
+
+            {(coverImagePreviewUrl || coverImageUrl.trim()) && (
+              <div className="mt-3">
+                <div className="d-flex align-items-center justify-content-between">
+                  <div className="small text-muted">Preview</div>
+                  <button
+                    type="button"
+                    className="btn btn-sm btn-outline-danger"
+                    onClick={clearCoverImage}
+                  >
+                    Remove
+                  </button>
+                </div>
+                <div className="border rounded bg-light p-2 mt-2">
+                  <img
+                    src={coverImagePreviewUrl || coverImageUrl}
+                    alt="Cover preview"
+                    style={{
+                      width: "100%",
+                      maxHeight: 220,
+                      objectFit: "cover",
+                      borderRadius: 8,
+                    }}
+                  />
+                </div>
+              </div>
+            )}
 
             <div className="mt-2">
               <label className="form-label">Or paste image URL</label>

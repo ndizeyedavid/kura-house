@@ -55,7 +55,7 @@ export default function AdminSidebar({
             </button>
           </div>
 
-          <hr />
+          {/* <hr />
 
           <div className="small text-muted">Quick actions</div>
           <div className="d-grid gap-2 mt-2">
@@ -73,7 +73,7 @@ export default function AdminSidebar({
             >
               Manage Categories
             </button>
-          </div>
+          </div> */}
         </div>
       </div>
     </div>

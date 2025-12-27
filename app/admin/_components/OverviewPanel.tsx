@@ -155,13 +155,13 @@ export default function OverviewPanel({
               >
                 Review inbox ({stats.totalMessages})
               </button>
-              <button
+              {/* <button
                 type="button"
                 className="btn btn-outline-secondary"
                 disabled
               >
                 Settings (later)
-              </button>
+              </button> */}
             </div>
           </div>
         </div>

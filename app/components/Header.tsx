@@ -4,7 +4,7 @@ export default function Header() {
   const links = [
     {
       text: "Home",
-      href: "/home",
+      href: "/",
       active: true,
     },
     {
@@ -29,7 +29,7 @@ export default function Header() {
     },
     {
       text: "Contact",
-      href: "/Contact",
+      href: "/contact",
       active: false,
     },
   ];

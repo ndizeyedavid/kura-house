@@ -9,7 +9,7 @@ export default function Header() {
     },
     {
       text: "About",
-      href: "#about",
+      href: "/#about",
       active: false,
     },
     {
@@ -19,7 +19,7 @@ export default function Header() {
     },
     {
       text: "Team",
-      href: "/Team",
+      href: "/#team",
       active: false,
     },
     {

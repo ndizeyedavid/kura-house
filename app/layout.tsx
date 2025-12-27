@@ -23,7 +23,23 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
+      <link
+        href="/lib/animate/animate.min.css"
+        precedence="default"
+        rel="stylesheet"
+      />
+      <link
+        href="/lib/owlcarousel/assets/owl.carousel.min.css"
+        precedence="default"
+        rel="stylesheet"
+      />
+      <link
+        rel="stylesheet"
+        href="/css/bootstrap.min.css"
+        precedence="default"
+      />
+      <link rel="stylesheet" href="/css/style.css" precedence="default" />
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >

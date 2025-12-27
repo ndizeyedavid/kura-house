@@ -9,7 +9,7 @@ export default function Header() {
     },
     {
       text: "About",
-      href: "/about",
+      href: "#about",
       active: false,
     },
     {

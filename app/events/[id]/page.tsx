@@ -21,7 +21,7 @@ export default async function EventDetailsPage({ params }: Props) {
   if (!event) notFound();
 
   return (
-    <div className="container py-5" style={{ paddingTop: 140 }}>
+    <div className="container py-5" style={{ paddingTop: 240 }}>
       <div className="row g-4">
         <div className="col-12 col-lg-8">
           <div className="mb-3">

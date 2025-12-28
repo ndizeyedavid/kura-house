@@ -5,6 +5,19 @@ declare global {
   var prisma: PrismaClient | undefined;
 }
 
-export const prisma = global.prisma ?? new PrismaClient();
+let prismaClient: PrismaClient | undefined;
 
-if (process.env.NODE_ENV !== "production") global.prisma = prisma;
+function getPrismaClient() {
+  if (prismaClient) return prismaClient;
+
+  prismaClient = global.prisma ?? new PrismaClient();
+  if (process.env.NODE_ENV !== "production") global.prisma = prismaClient;
+  return prismaClient;
+}
+
+export const prisma = new Proxy({} as PrismaClient, {
+  get(_target, prop) {
+    const client = getPrismaClient();
+    return (client as any)[prop];
+  },
+});

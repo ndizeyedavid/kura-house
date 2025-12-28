@@ -1,6 +1,11 @@
+"use client";
+
 import { ArrowRight, Mail, MapPin } from "lucide-react";
 import Link from "next/link";
+import { useState } from "react";
+
 export default function Header() {
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
   const links = [
     {
       text: "Home",
@@ -64,18 +69,24 @@ export default function Header() {
         <button
           type="button"
           className="navbar-toggler me-4"
-          data-bs-toggle="collapse"
-          data-bs-target="#navbarCollapse"
+          onClick={() => setIsMenuOpen(!isMenuOpen)}
+          aria-controls="navbarCollapse"
+          aria-expanded={isMenuOpen}
+          aria-label="Toggle navigation"
         >
           <span className="navbar-toggler-icon"></span>
         </button>
-        <div className="collapse navbar-collapse" id="navbarCollapse">
+        <div
+          className={`navbar-collapse ${isMenuOpen ? "show" : "collapse"}`}
+          id="navbarCollapse"
+        >
           <div className="navbar-nav ms-auto p-4 p-lg-0">
             {links.map((link, index) => (
               <Link
                 href={link.href}
                 key={index}
                 className={`nav-item nav-link ${link.active && "active"}`}
+                onClick={() => setIsMenuOpen(false)}
               >
                 {link.text}
               </Link>
